@@ -1,0 +1,14 @@
+	mi - The interactive file mover
+
+"mi" opens an editor with a list of arguments, preceded by a
+hash key for each. Edit an argument to rename the
+corresponding file.
+
+Prerequisites:
+
+	o GNU sh compatible shell
+	o git ("git hash-object" is used to create the hashes)
+	o an editor (configurable via the environment
+	  variable EDITOR)
+
+Clemens Buchacher 2009-01-28
