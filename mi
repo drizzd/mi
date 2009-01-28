@@ -42,12 +42,12 @@ shift
 
 if test -z "$1"
 then
-	set -- `ls`
+	set -- *
 fi
 orignames=`mktemp`
 while test -n "$1"
 do
-	echo `echo $1 | sha1sum	- | cut -f1 -d' '` $1
+	echo `echo "$1" | sha1sum - | cut -f1 -d' '` "$1"
 	shift
 done > "$orignames"
 
@@ -64,42 +64,31 @@ then
 fi
 
 oldlines=`mktemp`
+cat "$newnames" | grep -v '^\s*\(#.*\)\?$' | \
 while read sha1 newname
 do
-	if test -z "$sha1" || expr "$sha1" : "\s*#.*" >/dev/null
-	then
-		continue
-	fi
 	if ! expr "$sha1" : '[0-9a-f]\{40\}$' >/dev/null
 	then
 		error "invalid hash: $sha1"
+		continue
 	fi
-	oldname=
-	sed -n "s/^$sha1 //p" "$orignames" > $oldlines
-	while read name
-	do
-		if test -n "$oldname"
-		then
-			error "duplicate hash: $sha1"
-		fi
-		oldname="$name"
-	done < $oldlines
+	oldname=`sed -n "/^$sha1\s\+/ {s/^$sha1\s\+//p; q}" "$orignames"`
 	if test -z "$oldname"
 	then
-		error "invalid hash: $sha1"
-	else
-		if test "$oldname" != "$newname"
+		error "unknown hash: $sha1"
+		continue
+	fi
+	if test "$oldname" != "$newname"
+	then
+		echo "$oldname -> $newname"
+		if test -z "$force" && test -e "$newname"
 		then
-			echo "$oldname -> $newname"
-			if test -z "$force" && test -e "$newname"
-			then
-				error "rename would overwrite existing file: $newname"
-			else
-				mv -f "$oldname" "$newname"
-			fi
+			error "rename would overwrite existing file: $newname"
+		else
+			mv -f "$oldname" "$newname"
 		fi
 	fi
-done < "$newnames"
+done
 
 rm -f "$newnames"
 rm -f "$orignames"
