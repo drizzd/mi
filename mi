@@ -47,7 +47,7 @@ fi
 orignames=`mktemp`
 while test -n "$1"
 do
-	echo `echo $1 | git hash-object --stdin` $1
+	echo `echo $1 | sha1sum	- | cut -f1 -d' '` $1
 	shift
 done > "$orignames"
 

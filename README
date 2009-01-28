@@ -7,7 +7,7 @@ corresponding file.
 Prerequisites:
 
 	o GNU sh compatible shell
-	o git ("git hash-object" is used to create the hashes)
+	o sha1sum
 	o an editor (configurable via the environment
 	  variable EDITOR)
 
