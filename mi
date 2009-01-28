@@ -57,7 +57,7 @@ newnames=`mktemp`
 	echo "# Remove all content to abort";
 	cat "$orignames"
 ) > $newnames
-if ! $EDITOR "$newnames"
+if ! ${EDITOR:=vi} "$newnames"
 then
 	error "aborted"
 	exit 1
