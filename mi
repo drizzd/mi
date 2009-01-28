@@ -10,7 +10,7 @@
 #
 #	If two files have the same target, or if files 'a', 'b', are renamed to
 #	'b', 'c', respectively, in the wrong order. The file may be overwritten.
-# 
+#
 #  o subentry conflicts
 #
 #   If both a directory and its contained files are moved, this can have
