@@ -1,0 +1,105 @@
+#!/bin/sh
+#
+#  mi
+#
+#  28-Jan-2009	Clemens Buchacher <clemens.buchacher@infineon.com>
+#
+#  BUGS
+#
+#  o name conflicts
+#
+#	If two files have the same target, or if files 'a', 'b', are renamed to
+#	'b', 'c', respectively, in the wrong order. The file may be overwritten.
+# 
+#  o subentry conflicts
+#
+#   If both a directory and its contained files are moved, this can have
+#   unexpected results.
+#
+
+prog=$0
+
+error()
+{
+	echo -n "$prog: error: "
+	echo $@ >&2
+}
+
+OPT=`getopt -o f -- "$@"` || exit 1
+eval set -- "$OPT"
+
+force=
+done=
+while test "$1" != "--"
+do
+	case "$1" in
+		-f) force=YesPlease;;
+		*) echo "unkown option: $1"; exit 1;;
+	esac
+	shift
+done
+shift
+
+if test -z "$1"
+then
+	set -- `ls`
+fi
+orignames=`mktemp`
+while test -n "$1"
+do
+	echo `echo $1 | git hash-object --stdin` $1
+	shift
+done > "$orignames"
+
+newnames=`mktemp`
+(
+	echo "# This program is under development. Use at your own risk!";
+	echo "# Remove all content to abort";
+	cat "$orignames"
+) > $newnames
+if ! $EDITOR "$newnames"
+then
+	error "aborted"
+	exit 1
+fi
+
+oldlines=`mktemp`
+while read sha1 newname
+do
+	if test -z "$sha1" || expr "$sha1" : "\s*#.*" >/dev/null
+	then
+		continue
+	fi
+	if ! expr "$sha1" : '[0-9a-f]\{40\}$' >/dev/null
+	then
+		error "invalid hash: $sha1"
+	fi
+	oldname=
+	sed -n "s/^$sha1 //p" "$orignames" > $oldlines
+	while read name
+	do
+		if test -n "$oldname"
+		then
+			error "duplicate hash: $sha1"
+		fi
+		oldname="$name"
+	done < $oldlines
+	if test -z "$oldname"
+	then
+		error "invalid hash: $sha1"
+	else
+		if test "$oldname" != "$newname"
+		then
+			echo "$oldname -> $newname"
+			if test -z "$force" && test -e "$newname"
+			then
+				error "rename would overwrite existing file: $newname"
+			else
+				mv -f "$oldname" "$newname"
+			fi
+		fi
+	fi
+done < "$newnames"
+
+rm -f "$newnames"
+rm -f "$orignames"
