@@ -80,10 +80,10 @@ do
 	fi
 	if test "$oldname" != "$newname"
 	then
-		echo "$oldname -> $newname"
+		echo "`$oldname\' -> `$newname\'"
 		if test -z "$force" && test -e "$newname"
 		then
-			error "rename would overwrite existing file: $newname"
+			error "rename would overwrite existing file"
 		else
 			mv -f "$oldname" "$newname"
 		fi
